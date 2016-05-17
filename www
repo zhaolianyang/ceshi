@@ -1,0 +1,222 @@
+#include<reg52.h>
+#include<string.h>
+char flag=0,a[20];
+int num=0;
+char x10[13]="I am a robot\n";
+char x20[3]="Hi\n";
+char x30[2]="7\n";
+char x40[3]="OK\n";
+char x50[11]="on problem\n";
+char x60[]="sorry,I can't understand.\n";
+char i=0;
+int t=0,p=0,w=0;
+sbit wela=P2^7;
+sbit dula=P2^6;
+void display();
+void init();
+
+void clear(char a[]);
+void delay(int z);
+int match(char *a,char *b);
+void main()
+{
+	ES=0;
+	SCON=0x50;
+	TMOD=0x21;
+	TH1=0xfd;
+	TL1=0xfd;
+	PCON=0x00;
+	TR1=1;
+	EA=1;
+	ES=1;
+	init();
+
+	while(1) 
+	{
+		if(flag==1)
+			{
+				if(match(a,"who are you."))
+					{
+						w=1;
+						ES=0;
+						flag=0;
+						for(i=0;i<=12;i++)
+						{	SBUF=x10[i];
+							while(!TI);			
+							TI=0;
+						}
+							ES=1;
+							i=0;
+						clear(a);
+					}
+					
+				if(match(a,"hello."))
+					{
+						w=1;
+						ES=0;
+						flag=0;
+						for(i=0;i<=2;i++)
+						{	SBUF=x20[i];
+							while(!TI);
+							TI=0;
+						}
+						ES=1;
+						i=0;
+						clear(a);	
+					}
+
+
+				if(match(a,"how old are you."))
+					{
+						w=1;
+						TR0=1;
+						ES=0;
+						flag=0;
+						for(i=0;i<=1;i++)
+						{	SBUF=x30[i];
+							while(!TI);
+							TI=0;
+						}
+						ES=1;
+						i=0;
+						clear(a);
+						if(p>50)
+						{delay(100);TR0=0;}
+					}
+
+
+
+				if(match(a,"turn on a light."))
+					{
+						w=1;
+						ES=0;
+						flag=0;
+						for(i=0;i<=2;i++)
+						{	SBUF=x40[i];
+							while(!TI);
+							TI=0;
+						}
+						ES=1;
+						i=0;
+						clear(a);
+						P1=0xfe;	
+					}
+
+
+
+				if(match(a,"turn off a light."))
+					{
+						w=1;
+						ES=0;
+						flag=0;
+						for(i=0;i<=10;i++)
+						{	SBUF=x50[i];
+							while(!TI);
+							TI=0;
+						}
+						ES=1;
+						i=0;
+						clear(a);
+						P1=0xff;	
+					}
+				if(w==0)
+					{
+						ES=0;
+						flag=0;
+						for(i=0;i<=25;i++)
+						{	SBUF=x60[i];
+							while(!TI);			
+							TI=0;
+						}
+							ES=1;
+							i=0;
+						clear(a);
+					}
+				w=0;	
+			}
+	}
+}
+
+void stop() interrupt 4
+{
+	
+	if(RI)
+	{		
+		a[num]=SBUF;			
+		num++;	
+		if(SBUF=='.')
+
+		{flag=1;num=0;}
+		RI=0;
+	}
+}
+int match(char *a,char *b)
+{
+	for(;*a!='.'||*b!='.';a++,b++)
+		{
+			if(*a!=*b) return 0;
+		}
+	return 1;
+}
+
+void clear(char a[])
+{
+	for(;*a!='.';a++)
+		{
+			*a=NULL;
+		}
+}
+
+void display()
+{
+	wela=1;
+	P0=0xfe;
+	wela=0;
+	dula=1;
+	P0=0x3f;
+	dula=0;
+	delay(1);
+	P0=0xff;
+	
+
+	wela=1;
+	P0=0xfd;
+	wela=0;
+	dula=1;
+	P0=0x07;
+	dula=0;
+	delay(1);
+	P0=0xff;
+}
+
+void init()
+{
+	ET0=1;
+	TH0=(65536-1000)/256;
+	TL0=(65536-1000)%256;
+}
+
+void time0() interrupt 1
+{
+	TH0=(65536-1000)/256;
+	TL0=(65536-1000)%256;
+	display();
+	p++;
+	display();
+	if(p>1000)
+	{
+		wela=1;
+		P0=0xff;
+		wela=0;
+		TR0=0;
+	}
+}
+
+
+
+void delay(int z)
+{
+	int x,y;
+	for(x=0;x<=z;x++)
+		for(y=0;y<=110;y++);
+}
